@@ -1,0 +1,76 @@
+PistonControlSubsystem Documentation
+The PistonControlSubsystem class is designed for controlling a pneumatic piston on an FRC robot. This subsystem uses a Solenoid to activate or deactivate the piston based on user input from an Xbox controller. The subsystem is structured to allow both automatic control (via button presses) and manual control methods for extending or retracting the piston.
+
+Class Overview
+Class Name: PistonControlSubsystem
+Type: Subsystem (extends SubsystemBase)
+Purpose: To control a pneumatic piston (solenoid) using an Xbox controller and toggle the piston state (extended/retracted).
+Key Components
+Xbox Controller:
+
+Driver Controller: An XboxController instance is used to read input from the Xbox controller. The class listens for button presses to toggle the state of the piston.
+Button Used: The A button on the Xbox controller is used to toggle the piston.
+Solenoid:
+
+The Solenoid object is used to control the pneumatic piston. The solenoid is connected to a specific port on the Pneumatic Control Module (PCM) and can be activated (extended) or deactivated (retracted).
+Solenoid Port: Port 0 (the port to which the solenoid is connected).
+Piston State:
+
+The state of the piston is tracked with a boolean variable pistonExtended that determines whether the piston is extended (true) or retracted (false).
+Constructor: PistonControlSubsystem()
+The constructor initializes the components used to control the piston:
+
+XboxController: Sets up the Xbox controller to read button inputs (controller on port 0).
+Solenoid: Initializes the solenoid, associating it with the given port (Port 0).
+Piston State: The piston starts in a retracted state (false).
+Methods
+periodic()
+Purpose: This method is called periodically (once per robot control cycle) to check for input and update the piston state.
+Behavior:
+It checks if the A button on the Xbox controller is pressed using getAButtonPressed().
+If the A button is pressed, it toggles the state of the piston by calling the togglePiston() method.
+Updates the solenoid to reflect the current state of the piston (extended or retracted).
+togglePiston()
+Purpose: Toggles the piston’s state (extended or retracted).
+Behavior:
+If the piston is retracted, it will be extended, and vice versa.
+The state change is tracked by flipping the value of pistonExtended.
+extendPiston()
+Purpose: Extends the piston manually.
+Behavior:
+Sets pistonExtended to true and activates the solenoid to extend the piston.
+retractPiston()
+Purpose: Retracts the piston manually.
+Behavior:
+Sets pistonExtended to false and deactivates the solenoid to retract the piston.
+Usage
+The PistonControlSubsystem should be instantiated and used in the robot's control loop. Here's an example of how to integrate it into the robot:
+
+Instantiate the Subsystem: In the RobotContainer or the appropriate class, instantiate the PistonControlSubsystem:
+
+java
+Copy
+private final PistonControlSubsystem pistonControlSubsystem = new PistonControlSubsystem();
+Periodic Updates: In the robotPeriodic() or teleopPeriodic() method, call the periodic() method of the PistonControlSubsystem to check for button presses and update the piston state:
+
+java
+Copy
+public void robotPeriodic() {
+    pistonControlSubsystem.periodic();
+}
+Manual Control (Optional): If you need to manually extend or retract the piston (for example, using different buttons), you can directly call the extendPiston() or retractPiston() methods.
+
+Button Configuration
+A Button (Xbox Controller):
+Action: Toggle piston (extend/retract).
+Button State: Press the A button once to extend the piston; press it again to retract.
+Pneumatic System Configuration
+Solenoid: The solenoid controlling the piston should be connected to the Pneumatic Control Module (PCM) on the specified port (Port 0 in this example).
+Single-Acting vs. Double-Acting Piston: This code assumes a single-acting piston controlled by the solenoid. If you're using a double-acting piston, ensure your system is configured accordingly, and the solenoid will control the extension or retraction of the piston.
+Safety Notes
+Ensure that the pneumatic system is correctly pressurized and the solenoid is correctly wired to the PCM.
+Double-check the solenoid’s connection to ensure the correct action (extend or retract) is achieved with the correct command.
+Monitor the pressure in the pneumatic system to prevent issues related to air leakage or low pressure.
+Potential Enhancements
+Button Mapping: If you'd like to control the piston with other buttons (e.g., B, X), modify the button mappings in the periodic() method to check for those buttons instead of the A button.
+Feedback Sensors: If your pneumatic system uses sensors (e.g., limit switches or pressure sensors) to detect piston positions, you could integrate those sensors into the subsystem to provide additional feedback or safety features.
