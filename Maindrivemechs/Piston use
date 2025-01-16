@@ -1,0 +1,61 @@
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class PistonControlSubsystem extends SubsystemBase {
+
+    // Xbox controller
+    private XboxController driverController;
+
+    // Solenoid controlling the piston
+    private Solenoid pistonSolenoid;
+
+    // Boolean to track the current state of the piston
+    private boolean pistonExtended;
+
+    public PistonControlSubsystem() {
+        // Initialize Xbox controller
+        driverController = new XboxController(0);  // Port 0 for Xbox controller
+
+        // Initialize Solenoid for controlling the piston (on PCM port 0)
+        pistonSolenoid = new Solenoid(0);  // PCM port 0
+
+        // Initial state of the piston (starting as retracted)
+        pistonExtended = false;
+    }
+
+    @Override
+    public void periodic() {
+        // Check if the A button on the Xbox controller is pressed
+        if (driverController.getAButtonPressed()) {
+            togglePiston();  // Toggle the piston state when the A button is pressed
+        }
+
+        // Update the state of the solenoid (extend or retract the piston)
+        pistonSolenoid.set(pistonExtended);
+    }
+
+    /**
+     * Toggles the state of the piston.
+     */
+    private void togglePiston() {
+        // Toggle the piston state
+        pistonExtended = !pistonExtended;
+    }
+
+    /**
+     * Manually extend the piston.
+     */
+    public void extendPiston() {
+        pistonExtended = true;
+        pistonSolenoid.set(pistonExtended);
+    }
+
+    /**
+     * Manually retract the piston.
+     */
+    public void retractPiston() {
+        pistonExtended = false;
+        pistonSolenoid.set(pistonExtended);
+    }
+}
