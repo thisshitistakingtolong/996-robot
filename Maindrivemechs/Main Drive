@@ -1,0 +1,128 @@
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.wpilibj.controller.PIDController;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
+
+public class SwerveDriveSubsystem extends SubsystemBase {
+
+    // Motor controllers for drive (forward/backward & strafing)
+    private Spark frontLeftDriveMotor;
+    private Spark frontRightDriveMotor;
+    private Spark rearLeftDriveMotor;
+    private Spark rearRightDriveMotor;
+
+    // Motor controllers for steering (rotation of the wheels)
+    private Spark frontLeftSteerMotor;
+    private Spark frontRightSteerMotor;
+    private Spark rearLeftSteerMotor;
+    private Spark rearRightSteerMotor;
+
+    // Xbox controller
+    private XboxController driverController;
+
+    // Gyro sensor for robot's orientation
+    private Gyro gyro;
+
+    // PID controllers for each steering motor
+    private PIDController frontLeftPID;
+    private PIDController frontRightPID;
+    private PIDController rearLeftPID;
+    private PIDController rearRightPID;
+
+    // Robot dimensions
+    private static final double LENGTH = 0.5; // meters
+    private static final double WIDTH = 0.5; // meters
+
+    public SwerveDriveSubsystem() {
+        // Initialize drive motors (Spark motor controllers for simplicity)
+        frontLeftDriveMotor = new Spark(0);
+        frontRightDriveMotor = new Spark(1);
+        rearLeftDriveMotor = new Spark(2);
+        rearRightDriveMotor = new Spark(3);
+
+        // Initialize steer motors
+        frontLeftSteerMotor = new Spark(4);
+        frontRightSteerMotor = new Spark(5);
+        rearLeftSteerMotor = new Spark(6);
+        rearRightSteerMotor = new Spark(7);
+
+        // Initialize Xbox controller
+        driverController = new XboxController(0);
+
+        // Initialize gyroscope
+        gyro = new Gyro(); // Initialize your actual gyro here
+
+        // Initialize PID controllers for steering
+        frontLeftPID = new PIDController(1.0, 0.0, 0.0); // You can tune the PID constants
+        frontRightPID = new PIDController(1.0, 0.0, 0.0);
+        rearLeftPID = new PIDController(1.0, 0.0, 0.0);
+        rearRightPID = new PIDController(1.0, 0.0, 0.0);
+    }
+
+    @Override
+    public void periodic() {
+        // Get Xbox controller inputs
+        double xSpeed = driverController.getLeftX();  // Left joystick X for strafing
+        double ySpeed = -driverController.getLeftY(); // Left joystick Y for forward/backward
+        double rotation = driverController.getRightX();  // Right joystick X for rotation
+
+        // Apply deadzones to joystick inputs to avoid small, unintended movements
+        if (Math.abs(xSpeed) < 0.05) xSpeed = 0;
+        if (Math.abs(ySpeed) < 0.05) ySpeed = 0;
+        if (Math.abs(rotation) < 0.05) rotation = 0;
+
+        // Calculate wheel speeds and angles using the swerve kinematics
+        double[] wheelSpeeds = calculateSwerveWheelSpeeds(xSpeed, ySpeed, rotation);
+        double[] wheelAngles = calculateSwerveWheelAngles(xSpeed, ySpeed, rotation);
+
+        // Set motor speeds for the drive motors (based on wheel velocities)
+        frontLeftDriveMotor.set(wheelSpeeds[0]);
+        frontRightDriveMotor.set(wheelSpeeds[1]);
+        rearLeftDriveMotor.set(wheelSpeeds[2]);
+        rearRightDriveMotor.set(wheelSpeeds[3]);
+
+        // Use PID controllers to set the steering motor angles
+        frontLeftSteerMotor.set(frontLeftPID.calculate(getSteeringSensorAngle(frontLeftSteerMotor), wheelAngles[0]));
+        frontRightSteerMotor.set(frontRightPID.calculate(getSteeringSensorAngle(frontRightSteerMotor), wheelAngles[1]));
+        rearLeftSteerMotor.set(rearLeftPID.calculate(getSteeringSensorAngle(rearLeftSteerMotor), wheelAngles[2]));
+        rearRightSteerMotor.set(rearRightPID.calculate(getSteeringSensorAngle(rearRightSteerMotor), wheelAngles[3]));
+    }
+
+    // Calculate the wheel speeds based on the robot's movement (xSpeed, ySpeed, rotation)
+    private double[] calculateSwerveWheelSpeeds(double xSpeed, double ySpeed, double rotation) {
+        double[] wheelSpeeds = new double[4];
+
+        // Calculate the wheel speeds for each wheel
+        wheelSpeeds[0] = Math.sqrt((xSpeed + rotation * (LENGTH / 2)) * (xSpeed + rotation * (LENGTH / 2)) + (ySpeed) * (ySpeed));
+        wheelSpeeds[1] = Math.sqrt((xSpeed - rotation * (LENGTH / 2)) * (xSpeed - rotation * (LENGTH / 2)) + (ySpeed) * (ySpeed));
+        wheelSpeeds[2] = Math.sqrt((xSpeed + rotation * (LENGTH / 2)) * (xSpeed + rotation * (LENGTH / 2)) + (ySpeed) * (ySpeed));
+        wheelSpeeds[3] = Math.sqrt((xSpeed - rotation * (LENGTH / 2)) * (xSpeed - rotation * (LENGTH / 2)) + (ySpeed) * (ySpeed));
+
+        return wheelSpeeds;
+    }
+
+    // Calculate the wheel angles (steering positions) based on robot movement
+    private double[] calculateSwerveWheelAngles(double xSpeed, double ySpeed, double rotation) {
+        double[] wheelAngles = new double[4];
+
+        // Calculate the wheel angles based on the movement
+        wheelAngles[0] = Math.atan2(ySpeed + rotation * (LENGTH / 2), xSpeed + rotation * (WIDTH / 2)); // Front Left
+        wheelAngles[1] = Math.atan2(ySpeed + rotation * (LENGTH / 2), xSpeed - rotation * (WIDTH / 2)); // Front Right
+        wheelAngles[2] = Math.atan2(ySpeed - rotation * (LENGTH / 2), xSpeed + rotation * (WIDTH / 2)); // Rear Left
+        wheelAngles[3] = Math.atan2(ySpeed - rotation * (LENGTH / 2), xSpeed - rotation * (WIDTH / 2)); // Rear Right
+
+        return wheelAngles;
+    }
+
+    // Mock method to get the current steering angle of the motor (you'd typically use a sensor like an encoder)
+    private double getSteeringSensorAngle(Spark steerMotor) {
+        // This would interface with an actual sensor to get the current angle (for simplicity, returning 0 here)
+        return 0;
+    }
+
+    // Optional: Implement a method to reset the gyro if needed
+    public void resetGyro() {
+        gyro.reset();
+    }
+}
