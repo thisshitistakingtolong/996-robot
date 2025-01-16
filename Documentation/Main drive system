@@ -1,0 +1,114 @@
+SwerveDriveSubsystem Documentation
+Overview
+This Java class SwerveDriveSubsystem is designed for an FRC (FIRST Robotics Competition) robot with a swerve drive system. The robot's drive subsystem allows precise control of all four wheels (which can independently rotate and drive), providing full control over translation (forward/backward, strafing) and rotation (turning).
+
+The subsystem utilizes an Xbox controller for user input and controls four drive motors and four steering motors. PID (Proportional-Integral-Derivative) controllers are implemented to adjust the steering angles of the swerve modules to ensure accurate positioning.
+
+Key Components
+Drive Motors: These motors are responsible for controlling the motion of each wheel (forward, backward, strafing).
+
+frontLeftDriveMotor
+frontRightDriveMotor
+rearLeftDriveMotor
+rearRightDriveMotor
+Steering Motors: These motors adjust the steering angle of each swerve module.
+
+frontLeftSteerMotor
+frontRightSteerMotor
+rearLeftSteerMotor
+rearRightSteerMotor
+Xbox Controller: Provides input for controlling the robot's movement.
+
+Left joystick (X axis): Controls strafing (side-to-side movement).
+Left joystick (Y axis): Controls forward and reverse movement.
+Right joystick (X axis): Controls robot rotation (turning).
+Gyroscope: Provides the robot’s orientation, which could be used to correct for drift or maintain a consistent heading (though the gyro is not fully implemented here).
+
+PID Controllers: One for each steering motor, controlling the motor's movement to set the desired angle of the swerve modules.
+
+frontLeftPID
+frontRightPID
+rearLeftPID
+rearRightPID
+Constructor: SwerveDriveSubsystem()
+The constructor initializes:
+
+The drive motors and steering motors (with their respective motor controller ports).
+The Xbox controller for user input.
+A gyroscope for orientation tracking.
+The PID controllers for each steering motor, with basic placeholder PID constants.
+Method: periodic()
+This method is called periodically (i.e., once every robot control loop cycle) and performs the following actions:
+
+Reads Inputs: It gathers the current inputs from the Xbox controller:
+
+xSpeed (left joystick X-axis) for strafing.
+ySpeed (left joystick Y-axis) for forward/reverse movement.
+rotation (right joystick X-axis) for robot rotation.
+Applies Deadzone: It applies a deadzone filter to each joystick input to prevent unintended movements from small joystick deflections.
+
+Calculates Wheel Speeds and Angles:
+
+calculateSwerveWheelSpeeds(xSpeed, ySpeed, rotation): Calculates the wheel speeds based on the robot’s xSpeed, ySpeed, and rotation inputs.
+calculateSwerveWheelAngles(xSpeed, ySpeed, rotation): Calculates the steering angles for each wheel based on the robot’s motion.
+Set Motor Speeds:
+
+The calculated wheel speeds are applied to the drive motors (frontLeftDriveMotor, frontRightDriveMotor, rearLeftDriveMotor, rearRightDriveMotor).
+Steering Control:
+
+The steering motors are controlled via the PID controllers (frontLeftPID, frontRightPID, rearLeftPID, rearRightPID), which adjust the motors to move the swerve modules to the correct angles.
+Method: calculateSwerveWheelSpeeds()
+Purpose
+Calculates the speeds required for each wheel to achieve the desired robot movement (forward/backward, strafing, rotation).
+
+Parameters
+xSpeed: Speed of the robot in the X direction (strafing).
+ySpeed: Speed of the robot in the Y direction (forward/backward).
+rotation: Speed of the robot's rotation (turning).
+Returns
+An array of doubles representing the required speed for each of the four wheels (front-left, front-right, rear-left, rear-right).
+Logic
+The wheel speeds are calculated using basic trigonometry to determine the magnitude of the vector needed to move each wheel. This is a simplified kinematic model and could be further expanded for more complex swerve drive geometries.
+
+Method: calculateSwerveWheelAngles()
+Purpose
+Calculates the desired angles (steering positions) for each wheel to achieve the desired robot movement.
+
+Parameters
+xSpeed: Speed of the robot in the X direction (strafing).
+ySpeed: Speed of the robot in the Y direction (forward/backward).
+rotation: Speed of the robot's rotation (turning).
+Returns
+An array of doubles representing the desired angle for each of the four wheels (front-left, front-right, rear-left, rear-right).
+Logic
+The angle for each wheel is calculated using the atan2 function, which computes the angle of the velocity vector relative to the X and Y axes. This angle represents the direction each wheel needs to face to achieve the desired robot movement.
+
+Method: getSteeringSensorAngle()
+Purpose
+Returns the current angle of the steering motor for a given wheel.
+
+Parameters
+steerMotor: The steering motor whose current angle is being queried.
+Returns
+The current angle of the steering motor in degrees (0 to 360 or -180 to 180, depending on the sensor used).
+Notes
+This method should interface with an actual sensor (such as an encoder or an absolute position sensor) to retrieve the angle of the swerve wheel. In this example, the method is a placeholder returning 0.
+
+Method: resetGyro()
+Purpose
+Resets the gyroscope to a known initial orientation (optional).
+
+Notes
+The gyro reset method would be used to clear any drift or errors in the gyroscope’s readings. It is useful if you want to recalibrate the robot’s heading during the operation.
+
+PID Control Overview
+Each steering motor uses a PID controller to adjust the steering angle. PID controllers ensure that each swerve module's wheel rotates smoothly and precisely to the desired angle. The PIDController class used here takes the current angle of the steering motor (via getSteeringSensorAngle()) and adjusts the motor's output until it reaches the target angle.
+
+Proportional (P) term adjusts the speed of correction based on the difference between the current and target angle.
+Integral (I) term accounts for accumulated errors over time.
+Derivative (D) term reduces overshoot by considering the rate of change of the error.
+Notes:
+Sensor Integration: The actual implementation should replace the getSteeringSensorAngle() method with code that reads from an actual encoder or position sensor to determine the current angle of the steering motors.
+PID Tuning: The PID constants (1.0, 0.0, 0.0) are placeholders and must be tuned to the robot's mechanical characteristics for optimal performance.
+Robot Geometry: The LENGTH and WIDTH constants are set to 0.5 meters as placeholders and must be adjusted to match the actual size of the robot.
+Gyroscope: While a Gyro is mentioned, it is not fully integrated into the control loop in this version of the code.
