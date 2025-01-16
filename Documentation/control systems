@@ -1,0 +1,120 @@
+Robot Control Documentation for Swerve Drive and Piston System
+This document provides comprehensive information about the control system for the FRC robot that combines a swerve drive mechanism and pneumatic piston control. The robot is operated using an Xbox controller, where different buttons and joystick movements are mapped to specific actions for robot movement and piston control.
+
+Overview
+The robot's control system is divided into two main functional components:
+
+Swerve Drive System: This system controls the movement of the robot, allowing for forward/backward motion, strafing, and rotation.
+Pneumatic Piston Control: This system controls the extension and retraction of a pneumatic piston using a solenoid.
+The control system integrates both subsystems and utilizes the Xbox controller for user input. The following sections detail the individual controls and their functionality.
+
+Control Components
+Xbox Controller (Port 0)
+The Xbox controller provides the interface for user input.
+The controller is mapped as follows:
+Left Joystick (Y-axis): Controls forward/backward motion of the robot.
+Left Joystick (X-axis): Controls strafing (side-to-side movement) of the robot.
+Right Joystick (X-axis): Controls the rotation of the robot (turning).
+A Button: Toggles the state of the pneumatic piston (extend/retract).
+Subsystems
+SwerveDriveSubsystem: Manages the robot's swerve drive system, which includes controlling the drive and steer motors for each swerve module.
+PistonControlSubsystem: Manages the pneumatic piston, allowing it to extend or retract based on button input.
+Control Mappings
+1. Swerve Drive System Controls
+The robot's movement is controlled using the left and right joysticks on the Xbox controller. The system allows the robot to drive forward, backward, strafe left/right, and rotate in place.
+
+Joystick Controls for Movement:
+Left Joystick (Y-axis):
+
+Forward/Backward Control: Push the left joystick forward to move the robot forward, and pull it backward to move the robot in reverse.
+Range: The joystick value is mapped to the robot's forward/backward speed.
+Negative values indicate movement in reverse, while positive values move the robot forward.
+Left Joystick (X-axis):
+
+Strafe (Side-to-Side) Control: Push the left joystick left to strafe the robot to the left, and push it right to strafe the robot to the right.
+Range: The joystick value is mapped to the robot's lateral speed.
+Negative values move the robot left, while positive values move the robot right.
+Right Joystick (X-axis):
+
+Rotation Control: Moving the right joystick left or right rotates the robot in place.
+Range: The joystick value is mapped to the robot’s rotation speed (angular velocity).
+Negative values cause counterclockwise rotation, while positive values cause clockwise rotation.
+Movement Logic in the SwerveDriveSubsystem:
+The SwerveDriveSubsystem takes the values from the Xbox controller’s joysticks and applies them to control the individual drive and steering motors for each swerve module.
+The forward/backward, strafe, and rotation values are processed to determine the speed and angle of each swerve wheel to achieve the desired movement.
+2. Piston Control
+The robot has a pneumatic piston controlled by a solenoid, which can be extended or retracted based on user input. The A button on the Xbox controller toggles the state of the piston.
+
+A Button (Xbox Controller):
+Purpose: Toggle the pneumatic piston (extend or retract).
+Action: When the A button is pressed, the PistonControlSubsystem toggles the state of the piston.
+Extended: The piston will extend when the button is pressed if it is retracted.
+Retracted: The piston will retract when the button is pressed if it is extended.
+Pneumatic Piston Logic in the PistonControlSubsystem:
+The PistonControlSubsystem listens for the A button press and changes the state of the solenoid accordingly.
+The state of the piston is tracked with a boolean variable pistonExtended, which toggles each time the button is pressed.
+The solenoid is activated to extend the piston when pistonExtended is true, and it is deactivated to retract the piston when false.
+Subsystems Overview
+1. SwerveDriveSubsystem
+The SwerveDriveSubsystem controls the robot's drive motors and steer motors for each swerve module. The subsystem is responsible for calculating the necessary wheel speeds and angles based on the user inputs from the joysticks and executing the movement.
+
+Key Methods:
+drive(double xSpeed, double ySpeed, double rotation): This method receives the movement inputs from the controller (xSpeed, ySpeed, and rotation) and calculates the wheel speeds and angles needed to achieve the desired movement.
+periodic(): This method is called periodically to update the subsystem, and it can include tasks like checking sensors, updating encoders, or adjusting wheel speeds based on the current robot state.
+2. PistonControlSubsystem
+The PistonControlSubsystem manages the pneumatic piston’s extension and retraction using a solenoid. The subsystem listens for button presses on the Xbox controller and toggles the piston accordingly.
+
+Key Methods:
+togglePiston(): This method toggles the piston’s state between extended and retracted.
+periodic(): This method checks for the A button press and updates the state of the piston accordingly.
+extendPiston(): This method can be used to manually extend the piston.
+retractPiston(): This method can be used to manually retract the piston.
+Integration of Subsystems
+1. RobotContainer
+The RobotContainer class serves as the central point for integrating and configuring the robot’s subsystems and button bindings. It binds the Xbox controller’s inputs to the actions that control the swerve drive and piston.
+
+Key Actions in RobotContainer:
+Drive Command: The SwerveDriveCommand is set as the default command for the SwerveDriveSubsystem, ensuring that the robot moves according to the controller’s inputs for forward, strafe, and rotation.
+Button Bindings: The A button is bound to toggle the piston’s state using the PistonControlSubsystem.
+java
+Copy
+public class RobotContainer {
+    private final XboxController driverController = new XboxController(0);
+    private final SwerveDriveSubsystem swerveDriveSubsystem = new SwerveDriveSubsystem();
+    private final PistonControlSubsystem pistonControlSubsystem = new PistonControlSubsystem();
+
+    public RobotContainer() {
+        configureButtonBindings();
+
+        swerveDriveSubsystem.setDefaultCommand(
+            new SwerveDriveCommand(
+                swerveDriveSubsystem,
+                () -> -driverController.getLeftY(),
+                () -> driverController.getLeftX(),
+                () -> driverController.getRightX()
+            )
+        );
+    }
+
+    private void configureButtonBindings() {
+        Button aButton = new JoystickButton(driverController, XboxController.Button.kA.value);
+        aButton.whenPressed(() -> pistonControlSubsystem.togglePiston());
+    }
+
+    public void robotPeriodic() {
+        swerveDriveSubsystem.periodic();
+        pistonControlSubsystem.periodic();
+    }
+}
+Control Flow
+Driving the Robot:
+
+Left Joystick (Y-axis): Controls forward and backward motion.
+Left Joystick (X-axis): Controls strafing (side-to-side movement).
+Right Joystick (X-axis): Controls the robot’s rotation.
+Controlling the Piston:
+
+A Button: When pressed, the piston will toggle between extended and retracted states.
+Safety Considerations
+Pneumatic System: Ensure that the pneumatic system is properly pressurized, and check that the solenoid is correctly wired to the Pneumatic Control Module (PCM). Always verify the correct configuration of the pneumatic system to avoid unexpected behavior.
+Joystick Deadzones: The controller's joystick values are mapped with deadzones, ensuring that slight unintentional movements of the joysticks do not affect the robot's movement.
