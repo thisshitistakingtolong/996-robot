@@ -1,0 +1,50 @@
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Button;
+
+public class RobotContainer {
+
+    // Create Xbox Controller (Port 0)
+    private final XboxController driverController = new XboxController(0);
+
+    // Create Subsystems
+    private final SwerveDriveSubsystem swerveDriveSubsystem = new SwerveDriveSubsystem();
+    private final PistonControlSubsystem pistonControlSubsystem = new PistonControlSubsystem();
+
+    public RobotContainer() {
+        // Configure button bindings
+        configureButtonBindings();
+
+        // Configure default commands
+        swerveDriveSubsystem.setDefaultCommand(
+            new SwerveDriveCommand(
+                swerveDriveSubsystem, 
+                () -> -driverController.getLeftY(),  // Forward/Back control
+                () -> driverController.getLeftX(),   // Strafe (Side-to-Side) control
+                () -> driverController.getRightX()   // Rotation control
+            )
+        );
+    }
+
+    /**
+     * Configures the button bindings for controlling the piston.
+     */
+    private void configureButtonBindings() {
+        // A button to toggle piston (extend/retract)
+        Button aButton = new JoystickButton(driverController, XboxController.Button.kA.value);
+
+        // Bind the A button to toggle the piston
+        aButton.whenPressed(() -> pistonControlSubsystem.togglePiston());
+    }
+
+    /**
+     * The method that is called every robot periodic loop to update subsystems.
+     */
+    public void robotPeriodic() {
+        // Call the periodic methods for subsystems to check inputs and update states
+        swerveDriveSubsystem.periodic();
+        pistonControlSubsystem.periodic();
+    }
+}
